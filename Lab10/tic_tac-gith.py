@@ -1,11 +1,14 @@
 import random
+from random import seed
 
+seed(40)
 
 class TicTacToe:
     def __init__(self, playerX, playerO):
         self.board = [' ']*9
         self.playerX, self.playerO = playerX, playerO
         self.playerX_turn = random.choice([True, False])
+        self.winner = None
 
     def play_game(self):
         self.playerX.start_game('X')
@@ -15,8 +18,8 @@ class TicTacToe:
                 player, char, other_player = self.playerX, 'X', self.playerO
             else:
                 player, char, other_player = self.playerO, 'O', self.playerX
-            if player.breed == "human":
-                self.display_board()
+            # if player.breed == "human":
+            #     self.display_board()
             space = player.move(self.board)
             if self.board[space-1] != ' ': # illegal move
                 player.reward(-99, self.board) # score of shame
@@ -25,10 +28,12 @@ class TicTacToe:
             if self.player_wins(char):
                 player.reward(1, self.board)
                 other_player.reward(-1, self.board)
+                self.winner = char
                 break
             if self.board_full(): # tie game
                 player.reward(0.5, self.board)
                 other_player.reward(0.5, self.board)
+                self.winner = None
                 break
             other_player.reward(0, self.board)
             self.playerX_turn = not self.playerX_turn
@@ -44,10 +49,10 @@ class TicTacToe:
     def board_full(self):
         return not any([space == ' ' for space in self.board])
 
-    def display_board(self):
-        row = " {} | {} | {}"
-        hr = "\n-----------\n"
-        print (row + hr + row + hr + row).format(*self.board)
+    # def display_board(self):
+    #     row = " {} | {} | {}"
+    #     hr = "\n-----------\n"
+    #     print (row + hr + row + hr + row).format(*self.board)
 
 
 class Player(object):
@@ -58,7 +63,7 @@ class Player(object):
         print ("\nNew game!")
 
     def move(self, board):
-        return int(raw_input("Your move? "))
+        return int(input("Your move? "))
 
     def reward(self, value, board):
         print ("{} rewarded: {}".format(self.breed, value))
@@ -227,13 +232,28 @@ class QLearningPlayer(Player):
 p1 = QLearningPlayer()
 p2 = QLearningPlayer()
 
-for i in xrange(0,200000):
+for i in range(0,200000):
     t = TicTacToe(p1, p2)
     t.play_game()
+    print(i)
 
-p1 = Player()
+p1 = RandomPlayer()
 p2.epsilon = 0
 
-while True:
+num_X = 0
+num_O = 0
+num_ties = 0
+for _ in range(100):
     t = TicTacToe(p1, p2)
     t.play_game()
+    print(t.winner)
+    if t.winner is "X":
+        num_X += 1
+    elif t.winner is "O":
+        num_O += 1
+    else:
+        num_ties += 1
+
+print("X wins: " + str(num_X))
+print("O wins: " + str(num_O))
+print("Ties: " + str(num_ties))
